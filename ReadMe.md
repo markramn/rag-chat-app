@@ -73,18 +73,8 @@ Contributions to the Terminal Chat Interface project are welcome. Please follow 
 4. Push to the original branch: `git push origin <project_name>/<location>`
 5. Create the pull request.
 
-Alternatively, see the GitHub documentation on [creating a pull request](https://help.github.com/articles/creating-a-pull-request/).
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Alternatively, see the GitHub documentation on [creating a pull request](https://help.github.com/articles/creating-a-pull-request/)..
 
 ## Contact
 
-If you want to contact me, you can reach me at `<your_email@example.com>`.
-
-## Acknowledgements
-
-- OpenAI for providing the GPT model API
-- Anime.js for smooth animations
-- The Flask team for the lightweight WSGI web application framework
+If you want to contact me, you can reach me at `markramn@gmail.com`.
