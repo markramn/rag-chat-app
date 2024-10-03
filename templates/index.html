@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Chat Interface</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --input-bg: #001100;
+            --button-bg: #003300;
+            --button-hover: #004400;
+            --user-msg-bg: #000000;
+            --agent-msg-bg: #000000;
+        }
+
+        .light-mode {
+            --bg-color: #d0d0d0;
+            --text-color: #006600;
+            --input-bg: #c0c0c0;
+            --button-bg: #a0a0a0;
+            --button-hover: #909090;
+            --user-msg-bg: #d0d0d0;
+            --agent-msg-bg: #d0d0d0;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        .chat-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: glitch 1s infinite;
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            border: 2px solid var(--text-color);
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            max-width: 80%;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background-color: var(--user-msg-bg);
+            align-self: flex-end;
+        }
+
+        .user-message::before {
+            content: "user > ";
+            color: var(--text-color);
+        }
+
+        .agent-message {
+            background-color: var(--agent-msg-bg);
+        }
+
+        .agent-message::before {
+            content: "agent > ";
+            color: var(--text-color);
+        }
+
+        .input-area {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        #user-input {
+            flex-grow: 1;
+            padding: 10px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 2px solid var(--text-color);
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        #send-button, #reset-button, #toggle-mode {
+            background-color: var(--button-bg);
+            color: var(--text-color);
+            border: 2px solid var(--text-color);
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+        }
+
+        #send-button:hover, #reset-button:hover, #toggle-mode:hover {
+            background-color: var(--button-hover);
+            transform: scale(1.05);
+        }
+
+        #send-button:active, #reset-button:active, #toggle-mode:active {
+            transform: scale(0.95);
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        #toggle-mode {
+            background-color: var(--button-bg);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-color);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--button-hover);
+        }
+
+        /* Blinking cursor effect */
+        .blink {
+            animation: blink-animation 1s steps(5, start) infinite;
+        }
+
+        @keyframes blink-animation {
+            to {
+                visibility: hidden;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>Terminal Chat Interface<span class="blink">_</span></h1>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Type your command...">
+            <button id="send-button">Send</button>
+        </div>
+        <div class="button-container">
+            <button id="reset-button">Reset</button>
+            <button id="toggle-mode">Toggle Mode</button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const resetButton = document.getElementById('reset-button');
+        const toggleModeButton = document.getElementById('toggle-mode');
+        const body = document.body;
+
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(isUser ? 'user-message' : 'agent-message');
+            chatMessages.appendChild(messageDiv);
+
+            if (isUser) {
+                messageDiv.textContent = content;
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            } else {
+                const words = content.split(' ');
+                let currentIndex = 0;
+
+                function addNextWord() {
+                    if (currentIndex < words.length) {
+                        messageDiv.textContent += (currentIndex > 0 ? ' ' : '') + words[currentIndex];
+                        currentIndex++;
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                        setTimeout(addNextWord, 50);
+                    }
+                }
+
+                addNextWord();
+            }
+
+            // Animate message appearance
+            anime({
+                targets: messageDiv,
+                opacity: [0, 1],
+                translateY: [10, 0],
+                duration: 500,
+                easing: 'easeOutQuad'
+            });
+        }
+
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (message) {
+                addMessage(message, true);
+                userInput.value = '';
+
+                fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    addMessage(data.message);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    addMessage('Sorry, there was an error processing your request.');
+                });
+            }
+        }
+
+        function resetConversation() {
+            fetch('/api/reset', {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                chatMessages.innerHTML = '';
+                addMessage("Conversation has been reset. How can I assist you?");
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addMessage('Sorry, there was an error resetting the conversation.');
+            });
+        }
+
+        function toggleMode() {
+            body.classList.toggle('light-mode');
+            const mode = body.classList.contains('light-mode') ? 'Light' : 'Dark';
+            addMessage(`Switched to ${mode} Mode`);
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        resetButton.addEventListener('click', resetConversation);
+        toggleModeButton.addEventListener('click', toggleMode);
+
+        // Initial greeting
+        setTimeout(() => {
+            addMessage("How can I help?");
+        }, 500);
+    </script>
+</body>
+</html>
